@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+  <!--
+    WARNING! Make sure that you match all Quasar related
+    tags to the same version! (Below it's "@2.18.6")
+  -->
+
+ <head>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet" type="text/css">
+    <link href="https://cdn.jsdelivr.net/npm/quasar@2.18.6/dist/quasar.prod.css" rel="stylesheet" type="text/css">
+  </head>
+
+  <body>
+    <!-- example of injection point where you write your app template -->
+    <div id="q-app"></div>
+
+    <!-- Add the following at the end of your body tag -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quasar@2.18.6/dist/quasar.umd.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quasar@2.18.6/dist/icon-set/svg-material-icons.umd.prod.js"></script>
+    <script src="navigation.js"></script>
+    
+    <script>
+      /*
+        Example kicking off the UI. Obviously, adapt this to your specific needs.
+        Assumes you have a <div id="q-app"></div> in your <body> above
+       */
+      const app = Vue.createApp({
+        setup () {
+          const { ref } = Vue
+          
+          const leftDrawerOpen = ref(false)
+          const contactForm = ref({
+            name: '',
+            email: '',
+            phone: '',
+            message: ''
+          })
+          
+          const services = ref([
+            {
+              title: 'Crop Management',
+              description: 'Advanced crop monitoring and management solutions for optimal yield',
+              icon: 'eco',
+              color: 'green'
+            },
+            {
+              title: 'Irrigation Systems',
+              description: 'Smart irrigation technology to conserve water and maximize efficiency',
+              icon: 'water_drop',
+              color: 'blue'
+            },
+            {
+              title: 'Soil Analysis',
+              description: 'Comprehensive soil testing and nutrient management programs',
+              icon: 'science',
+              color: 'brown'
+            },
+            {
+              title: 'Equipment Sales',
+              description: 'Quality agricultural machinery and equipment for modern farming',
+              icon: 'agriculture',
+              color: 'orange'
+            }
+          ])
+          
+          const products = ref([
+            {
+              name: 'Organic Fertilizer',
+              price: '$45/bag',
+              description: 'Premium organic fertilizer for sustainable farming',
+              image: 'https://via.placeholder.com/300x200?text=Organic+Fertilizer'
+            },
+            {
+              name: 'Smart Seeds',
+              price: '$120/kg',
+              description: 'High-quality genetically improved seeds for better harvests',
+              image: 'https://via.placeholder.com/300x200?text=Smart+Seeds'
+            },
+            {
+              name: 'Irrigation Kit',
+              price: '$299/set',
+              description: 'Complete drip irrigation system for small to medium farms',
+              image: 'https://via.placeholder.com/300x200?text=Irrigation+Kit'
+            }
+          ])
+          
+          const submitContact = () => {
+            console.log('Contact form submitted:', contactForm.value)
+            alert('Thank you for contacting us! We will get back to you soon.')
+            contactForm.value = {
+              name: '',
+              email: '',
+              phone: '',
+              message: ''
+            }
+          }
+          
+          return {
+            leftDrawerOpen,
+            contactForm,
+            services,
+            products,
+            submitContact
+          }
+        },
+        template: `
+          <q-layout view="hHh lpR fFf">
+            <!-- Header -->
+            <q-header elevated class="bg-green-7 text-white">
+              <q-toolbar>
+                <q-btn dense flat round icon="menu" @click="leftDrawerOpen = !leftDrawerOpen" />
+                <q-toolbar-title>
+                  <q-avatar>
+                    <img src="bneder.png" />
+                  </q-avatar>
+                  GreenHarvest Agriculture
+                </q-toolbar-title>
+                <q-space />
+                <q-btn flat label="Home" data-nav="home" />
+                <q-btn flat label="Services" data-nav="services" href="services.html" />
+                <q-btn flat label="Products" data-nav="products" href="products.html" />
+                <q-btn flat label="About" data-nav="about" href="about.html" />
+                <q-btn flat label="Contact" data-nav="contact" href="contact.html" />
+              </q-toolbar>
+            </q-header>
+
+            <!-- Left Drawer -->
+            <q-drawer v-model="leftDrawerOpen" side="left" overlay elevated>
+              <q-list>
+                <q-item-label header>Navigation</q-item-label>
+                <q-item clickable v-ripple data-drawer-nav="home">
+                  <q-item-section avatar>
+                    <q-icon name="home" />
+                  </q-item-section>
+                  <q-item-section>Home</q-item-section>
+                </q-item>
+                <q-item clickable v-ripple data-drawer-nav="services">
+                  <q-item-section avatar>
+                    <q-icon name="eco" />
+                  </q-item-section>
+                  <q-item-section>Services</q-item-section>
+                </q-item>
+                <q-item clickable v-ripple data-drawer-nav="products">
+                  <q-item-section avatar>
+                    <q-icon name="shopping_cart" />
+                  </q-item-section>
+                  <q-item-section>Products</q-item-section>
+                </q-item>
+                <q-item clickable v-ripple data-drawer-nav="about">
+                  <q-item-section avatar>
+                    <q-icon name="info" />
+                  </q-item-section>
+                  <q-item-section>About</q-item-section>
+                </q-item>
+                <q-item clickable v-ripple data-drawer-nav="contact">
+                  <q-item-section avatar>
+                    <q-icon name="phone" />
+                  </q-item-section>
+                  <q-item-section>Contact</q-item-section>
+                </q-item>
+              </q-list>
+            </q-drawer>
+
+            <!-- Main Content -->
+            <q-page-container>
+              <q-page>
+                <!-- Hero Section -->
+                <div class="q-pa-xl text-center bg-green-1">
+                  <div class="text-h2 text-weight-bold text-green-9 q-mb-md">
+                    Growing Tomorrow's Harvest Today
+                  </div>
+                  <div class="text-h5 text-green-7 q-mb-xl">
+                    Sustainable Agriculture Solutions for Modern Farming
+                  </div>
+                  <q-btn size="lg" color="green-7" label="Get Started" class="q-mr-md" />
+                  <q-btn size="lg" outline color="green-7" label="Learn More" />
+                </div>
+
+                <!-- Services Section -->
+                <div class="q-pa-xl">
+                  <div class="text-h4 text-weight-bold text-center q-mb-lg">Our Services</div>
+                  <div class="row q-gutter-lg justify-center">
+                    <div v-for="service in services" :key="service.title" class="col-12 col-sm-6 col-md-3">
+                      <q-card class="q-pa-md text-center" flat bordered>
+                        <q-avatar size="3rem" :color="service.color" text-color="white" class="q-mb-md">
+                          <q-icon :name="service.icon" size="2rem" />
+                        </q-avatar>
+                        <div class="text-h6 q-mb-sm">{{ service.title }}</div>
+                        <div class="text-grey-7">{{ service.description }}</div>
+                      </q-card>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Products Section -->
+                <div class="q-pa-xl bg-grey-1">
+                  <div class="text-h4 text-weight-bold text-center q-mb-lg">Featured Products</div>
+                  <div class="row q-gutter-lg justify-center">
+                    <div v-for="product in products" :key="product.name" class="col-12 col-sm-6 col-md-4">
+                      <q-card flat bordered>
+                        <q-img :src="product.image" height="200px" />
+                        <q-card-section>
+                          <div class="text-h6">{{ product.name }}</div>
+                          <div class="text-subtitle2 text-green-7 q-mb-sm">{{ product.price }}</div>
+                          <div class="text-grey-7">{{ product.description }}</div>
+                        </q-card-section>
+                        <q-card-actions align="right">
+                          <q-btn flat color="primary" label="Details" />
+                          <q-btn color="green-7" label="Order Now" />
+                        </q-card-actions>
+                      </q-card>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- About Section -->
+                <div class="q-pa-xl">
+                  <div class="row items-center q-gutter-xl">
+                    <div class="col-12 col-md-6">
+                      <div class="text-h4 text-weight-bold q-mb-lg">About GreenHarvest</div>
+                      <div class="text-body1 text-grey-7 q-mb-md">
+                        With over 25 years of experience in agricultural innovation, GreenHarvest Agriculture 
+                        has been at the forefront of sustainable farming solutions. We combine traditional 
+                        farming wisdom with cutting-edge technology to help farmers increase productivity 
+                        while preserving our environment.
+                      </div>
+                      <div class="text-body1 text-grey-7 q-mb-lg">
+                        Our team of agronomists, engineers, and farming experts work tirelessly to develop 
+                        solutions that address the challenges facing modern agriculture. From precision 
+                        farming to organic practices, we're committed to helping you grow better crops 
+                        and achieve sustainable success.
+                      </div>
+                      <q-btn color="green-7" label="Learn More About Us" />
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <q-img src="https://via.placeholder.com/600x400?text=Modern+Agriculture" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Statistics Section -->
+                <div class="q-pa-xl bg-green-7 text-white text-center">
+                  <div class="row q-gutter-lg justify-center">
+                    <div class="col-12 col-sm-6 col-md-3">
+                      <div class="text-h4 text-weight-bold">500+</div>
+                      <div class="text-h6">Happy Farmers</div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                      <div class="text-h4 text-weight-bold">10,000+</div>
+                      <div class="text-h6">Acres Served</div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                      <div class="text-h4 text-weight-bold">25+</div>
+                      <div class="text-h6">Years Experience</div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                      <div class="text-h4 text-weight-bold">98%</div>
+                      <div class="text-h6">Customer Satisfaction</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Contact Section -->
+                <div class="q-pa-xl bg-grey-1">
+                  <div class="text-h4 text-weight-bold text-center q-mb-lg">Get In Touch</div>
+                  <div class="row q-gutter-xl justify-center">
+                    <div class="col-12 col-md-6">
+                      <q-card flat bordered class="q-pa-lg">
+                        <q-form @submit="submitContact" class="q-gutter-md">
+                          <q-input
+                            filled
+                            v-model="contactForm.name"
+                            label="Your Name *"
+                            hint="Enter your full name"
+                            lazy-rules
+                            :rules="[val => val && val.length > 0 || 'Please enter your name']"
+                          />
+                          <q-input
+                            filled
+                            v-model="contactForm.email"
+                            label="Email *"
+                            type="email"
+                            hint="Enter your email address"
+                            lazy-rules
+                            :rules="[
+                              val => val && val.length > 0 || 'Please enter your email',
+                              val => val && val.includes('@') || 'Please enter a valid email'
+                            ]"
+                          />
+                          <q-input
+                            filled
+                            v-model="contactForm.phone"
+                            label="Phone Number"
+                            hint="Enter your phone number"
+                          />
+                          <q-input
+                            filled
+                            v-model="contactForm.message"
+                            type="textarea"
+                            label="Message *"
+                            hint="Tell us how we can help you"
+                            rows="4"
+                            lazy-rules
+                            :rules="[val => val && val.length > 0 || 'Please enter your message']"
+                          />
+                          <div class="text-center">
+                            <q-btn type="submit" color="green-7" size="lg" label="Send Message" />
+                          </div>
+                        </q-form>
+                      </q-card>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <div class="q-pa-lg">
+                        <div class="text-h6 q-mb-md">Contact Information</div>
+                        <div class="q-gutter-md">
+                          <div class="flex items-center q-gutter-sm">
+                            <q-icon name="location_on" color="green-7" size="1.5rem" />
+                            <div>123 Farm Road, Agricultural District, AG 12345</div>
+                          </div>
+                          <div class="flex items-center q-gutter-sm">
+                            <q-icon name="phone" color="green-7" size="1.5rem" />
+                            <div>+1 (555) 123-4567</div>
+                          </div>
+                          <div class="flex items-center q-gutter-sm">
+                            <q-icon name="email" color="green-7" size="1.5rem" />
+                            <div>info@greenharvest.agriculture</div>
+                          </div>
+                          <div class="flex items-center q-gutter-sm">
+                            <q-icon name="schedule" color="green-7" size="1.5rem" />
+                            <div>Mon-Fri: 8:00 AM - 6:00 PM, Sat: 9:00 AM - 2:00 PM</div>
+                          </div>
+                        </div>
+                        
+                        <div class="q-mt-xl">
+                          <div class="text-h6 q-mb-md">Follow Us</div>
+                          <div class="q-gutter-sm">
+                            <q-btn round color="green-7" icon="share" />
+                            <q-btn round color="green-7" icon="chat" />
+                            <q-btn round color="green-7" icon="photo_camera" />
+                            <q-btn round color="green-7" icon="business_center" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Footer -->
+                <q-footer elevated class="bg-green-9 text-white">
+                  <q-toolbar>
+                    <q-toolbar-title>
+                      © 2024 GreenHarvest Agriculture. All rights reserved.
+                    </q-toolbar-title>
+                    <div>
+                      <q-btn flat label="Privacy Policy" />
+                      <q-btn flat label="Terms of Service" />
+                    </div>
+                  </q-toolbar>
+                </q-footer>
+              </q-page>
+            </q-page-container>
+          </q-layout>
+        `
+      })
+
+      app.use(Quasar)
+      Quasar.IconSet.set(Quasar.IconSet.svgMaterialIcons)
+      app.mount('#q-app')
+    </script>
+  </body>
+</html>
