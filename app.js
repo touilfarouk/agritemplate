@@ -26,15 +26,29 @@ style.textContent = `
     border-radius: 4px;
   }
 
+  body.body--dark .active-nav {
+    background-color: rgba(255, 255, 255, 0.14) !important;
+  }
+
   .active-drawer-nav {
     background-color: #f1f8e9 !important;
     border-left: 3px solid #2E7D32;
     color: #2E7D32 !important;
   }
 
+  body.body--dark .active-drawer-nav {
+    background-color: rgba(46, 125, 50, 0.18) !important;
+    border-left: 3px solid #66bb6a;
+    color: #c8e6c9 !important;
+  }
+
   .nav-btn:hover {
     background-color: rgba(255, 255, 255, 0.05);
     transition: background-color 0.3s ease;
+  }
+
+  body.body--dark .nav-btn:hover {
+    background-color: rgba(255, 255, 255, 0.08);
   }
 `
 document.head.appendChild(style)

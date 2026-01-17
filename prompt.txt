@@ -1,0 +1,108 @@
+You are a senior frontend engineer.
+
+Goal:
+Convert an existing multi-page static HTML site into a Single-Page Application (SPA) using Vue 3 + Quasar + Vue Router, while keeping CDN-based loading (no bundler) and using native browser ES modules to split the app into multiple JS files.
+
+Hard requirements:
+- Use Vue 3, Quasar 2, and Vue Router 4 loaded from CDN as globals (window.Vue, window.Quasar, window.VueRouter).
+- Keep index.html as a minimal shell with <div id="q-app"></div> and CDN scripts.
+- Load the app entry with <script type="module" src="app.js"></script>.
+- Use Vue Router hash mode (createWebHashHistory) so it works on static hosting.
+- Remove all multi-page navigation (.html links). Navigation must use router paths.
+- Split the app into modules:
+  - components/AppShell.js: shared layout (header, drawer, footer) and router-view.
+  - pages/HomePage.js, pages/ServicesPage.js, pages/ProductsPage.js, pages/AboutPage.js, pages/ContactPage.js.
+  - app.js: router setup + app mount.
+- Do not rely on old navigation.js for routing; in SPA mode, routing is handled by Vue Router.
+
+Project file structure:
+- index.html
+- app.js
+- components/
+  - AppShell.js
+- pages/
+  - HomePage.js
+  - ServicesPage.js
+  - ProductsPage.js
+  - AboutPage.js
+  - ContactPage.js
+
+index.html (CDN shell) requirements:
+- Include Quasar CSS.
+- Include Material Icons font.
+- At end of body include scripts in this order:
+  1) https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js
+  2) https://cdn.jsdelivr.net/npm/vue-router@4/dist/vue-router.global.prod.js
+  3) https://cdn.jsdelivr.net/npm/quasar@2.18.6/dist/quasar.umd.prod.js
+  4) https://cdn.jsdelivr.net/npm/quasar@2.18.6/dist/icon-set/svg-material-icons.umd.prod.js
+  5) <script type="module" src="app.js"></script>
+
+app.js requirements:
+- Must be an ES module entry.
+- Import AppShell and all page modules.
+- Create routes:
+  - / -> HomePage
+  - /services -> ServicesPage
+  - /products -> ProductsPage
+  - /about -> AboutPage
+  - /contact -> ContactPage
+  - catch-all redirect to /
+- Create router:
+  - window.VueRouter.createRouter({ history: window.VueRouter.createWebHashHistory(), routes })
+- Create app:
+  - const app = window.Vue.createApp(AppShell)
+  - app.use(router)
+  - app.use(window.Quasar)
+- Configure Quasar icon set defensively:
+  - const quasar = window.Quasar
+  - if (quasar?.IconSet?.set) set svgMaterialIcons when available
+- Mount to #q-app.
+- Inject small CSS for active navigation highlighting and add body.body--dark overrides.
+
+components/AppShell.js requirements:
+- Exports: export const AppShell = { setup(){...}, template: `...` }
+- Use Composition API from window.Vue.
+- Use router hooks from window.VueRouter:
+  - const router = window.VueRouter.useRouter()
+  - const route = window.VueRouter.useRoute()
+- Provide navigation helpers:
+  - go(path): closes drawer and router.push(path) if needed
+  - navBtnClass(path): returns 'active-nav' when route.path matches
+  - drawerItemClass(path): returns 'active-drawer-nav' when route.path matches
+- Layout:
+  - q-layout with q-header, q-drawer, q-page-container, q-footer
+  - Header buttons navigate via go('/route') and apply active classes
+  - Drawer items navigate via go('/route') and apply active classes
+  - router-view renders pages
+
+Dark/Light mode requirement:
+- Add a toggle button in the header to switch theme.
+- Use Quasar Dark plugin:
+  - window.Quasar.Dark.set(true/false)
+- Persist preference:
+  - localStorage key: theme
+  - values: 'dark' or 'light'
+- Initial value selection:
+  1) If localStorage.theme exists, use it
+  2) Else use system preference: matchMedia('(prefers-color-scheme: dark)').matches
+- In AppShell setup:
+  - const isDark = ref(false)
+  - onMounted: load preference and call Quasar.Dark.set
+  - watch(isDark): persist + apply
+
+Pages requirements:
+- Each pages/*.js exports a Vue component:
+  - export const HomePage = { setup(){...}, template: `...` }
+- Use Quasar components in templates (q-page, q-btn, q-card, etc.).
+- If navigation is needed inside a page, use:
+  - const router = window.VueRouter.useRouter()
+  - router.push('/contact')
+
+Deployment / serving constraints:
+- Because ES modules are used, this must be served over http(s) (not file://).
+- Hash routing avoids server-side rewrite requirements.
+
+Output expectations when implementing:
+- Produce working code that runs directly in the browser with the CDN scripts.
+- Keep changes minimal and avoid introducing a bundler.
+- Do not add/remove unrelated comments or documentation.

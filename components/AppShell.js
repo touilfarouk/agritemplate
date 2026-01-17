@@ -1,10 +1,12 @@
 export const AppShell = {
   setup () {
-    const { ref } = window.Vue
+    const { ref, onMounted, watch } = window.Vue
 
     const leftDrawerOpen = ref(false)
     const router = window.VueRouter.useRouter()
     const route = window.VueRouter.useRoute()
+
+    const isDark = ref(false)
 
     const navBtnClass = (path) => (route.path === path ? 'active-nav' : '')
     const drawerItemClass = (path) => (route.path === path ? 'active-drawer-nav' : '')
@@ -16,11 +18,42 @@ export const AppShell = {
       }
     }
 
+    const applyDark = (value) => {
+      const quasar = window.Quasar
+      if (quasar && quasar.Dark && typeof quasar.Dark.set === 'function') {
+        quasar.Dark.set(!!value)
+      }
+    }
+
+    const toggleDark = () => {
+      isDark.value = !isDark.value
+    }
+
+    onMounted(() => {
+      const saved = localStorage.getItem('theme')
+      if (saved === 'dark') {
+        isDark.value = true
+      } else if (saved === 'light') {
+        isDark.value = false
+      } else {
+        isDark.value = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+      }
+
+      applyDark(isDark.value)
+    })
+
+    watch(isDark, (value) => {
+      localStorage.setItem('theme', value ? 'dark' : 'light')
+      applyDark(value)
+    })
+
     return {
       leftDrawerOpen,
+      isDark,
       navBtnClass,
       drawerItemClass,
-      go
+      go,
+      toggleDark
     }
   },
   template: `
@@ -35,6 +68,14 @@ export const AppShell = {
             GreenHarvest Agriculture
           </q-toolbar-title>
           <q-space />
+          <q-btn
+            dense
+            flat
+            round
+            class="nav-btn"
+            :icon="isDark ? 'dark_mode' : 'light_mode'"
+            @click="toggleDark"
+          />
           <q-btn flat class="nav-btn" label="Home" :class="navBtnClass('/')" @click="go('/')" />
           <q-btn flat class="nav-btn" label="Services" :class="navBtnClass('/services')" @click="go('/services')" />
           <q-btn flat class="nav-btn" label="Products" :class="navBtnClass('/products')" @click="go('/products')" />
