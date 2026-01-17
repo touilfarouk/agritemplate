@@ -19,15 +19,16 @@ class NavigationManager {
         this.waitForQuasar(() => {
             this.updateActiveNavigation();
             this.setupNavigationHandlers();
-            this.setupMobileMenu();
         });
     }
 
     waitForQuasar(callback) {
         const checkQuasar = () => {
             // Check if Quasar components are ready
-            const hasQuasarElements = document.querySelector('q-btn') || document.querySelector('q-item');
-            if (hasQuasarElements) {
+            const hasQuasarGlobal = typeof window.Quasar !== 'undefined';
+            const hasNavigationElements = document.querySelector('[data-nav]') || document.querySelector('[data-drawer-nav]');
+            const hasLayoutElements = document.querySelector('.q-layout') || document.querySelector('.q-page');
+            if (hasQuasarGlobal && (hasNavigationElements || hasLayoutElements)) {
                 this.isQuasarReady = true;
                 callback();
             } else {
@@ -71,6 +72,10 @@ class NavigationManager {
         };
         
         const targetPage = pageMap[pageName];
+        if (pageName === 'home') {
+            return this.currentPage === 'index.html' || this.currentPage === 'home.html';
+        }
+
         return this.currentPage === targetPage;
     }
 
@@ -112,7 +117,7 @@ class NavigationManager {
     }
 
     addPageTransition() {
-        const page = document.querySelector('q-page');
+        const page = document.querySelector('.q-page');
         if (page) {
             page.style.transition = 'opacity 0.2s ease-in-out';
             page.style.opacity = '0.7';
@@ -120,45 +125,26 @@ class NavigationManager {
     }
 
     setupMobileMenu() {
-        // Handle mobile menu toggle
-        document.addEventListener('click', (e) => {
-            const menuButton = e.target.closest('q-btn[icon="menu"]');
-            if (menuButton) {
-                this.toggleDrawer();
-            }
-        });
+        
     }
 
     toggleDrawer() {
-        // Try to find and toggle the drawer
-        const drawer = document.querySelector('q-drawer');
-        if (drawer) {
-            // Use Quasar's API if available, otherwise manipulate classes
-            if (drawer.$ && drawer.$q) {
-                // Quasar component instance
-                drawer.show();
-            } else {
-                // Fallback: try to find the toggle button
-                const toggleBtn = document.querySelector('q-btn[icon="menu"]');
-                if (toggleBtn) {
-                    toggleBtn.click();
-                }
-            }
+        const toggleBtn = document.querySelector('.q-header .q-btn--round');
+        if (toggleBtn) {
+            toggleBtn.click();
         }
     }
 
     closeDrawer() {
-        const drawer = document.querySelector('q-drawer');
-        if (drawer) {
-            if (drawer.$ && drawer.$q) {
-                drawer.hide();
-            } else {
-                // Fallback: try to find the close button
-                const closeBtn = document.querySelector('q-btn[icon="menu"]');
-                if (closeBtn) {
-                    closeBtn.click();
-                }
-            }
+        const backdrop = document.querySelector('.q-drawer__backdrop');
+        if (backdrop) {
+            backdrop.click();
+            return;
+        }
+
+        const closeBtn = document.querySelector('.q-header .q-btn--round');
+        if (closeBtn) {
+            closeBtn.click();
         }
     }
 
@@ -176,7 +162,7 @@ class NavigationManager {
             </div>
         `;
 
-        const pageContainer = document.querySelector('q-page');
+        const pageContainer = document.querySelector('.q-page');
         if (pageContainer) {
             pageContainer.insertBefore(breadcrumbContainer, pageContainer.firstChild);
         }
@@ -259,12 +245,12 @@ style.textContent = `
         color: #2E7D32 !important;
     }
     
-    q-btn[data-nav]:hover {
+    .q-btn[data-nav]:hover {
         background-color: rgba(255, 255, 255, 0.05);
         transition: background-color 0.3s ease;
     }
     
-    q-item[data-drawer-nav]:hover {
+    .q-item[data-drawer-nav]:hover {
         background-color: #f5f5f5;
         transition: background-color 0.3s ease;
     }
