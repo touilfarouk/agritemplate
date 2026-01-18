@@ -32,6 +32,7 @@ const cacheList = [
 
 // Install Event - Cache static assets
 self.addEventListener('install', event => {
+    self.skipWaiting(); // Force activate the new service worker
   event.waitUntil(
     caches.open(staticCache)
       .then(cache => {
