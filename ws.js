@@ -27,11 +27,7 @@ const PRECACHE_ASSETS = [
   '/icons/icon-384x384.png',
   '/icons/icon-512x512.png',
   '/icons/icon-192x192-maskable.png',
-  '/icons/icon-512x512-maskable.png',
-  
-  // Fonts
-  'https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons',
-  'https://cdn.jsdelivr.net/npm/quasar@2.18.6/dist/quasar.prod.css'
+  '/icons/icon-512x512-maskable.png'
 ];
 
 // Install Event - Cache static assets
@@ -41,9 +37,11 @@ self.addEventListener('install', (event) => {
   // Create a new cache and add all files to it
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
+      .then(async (cache) => {
         console.log('[ServiceWorker] Caching app shell');
-        return cache.addAll(PRECACHE_ASSETS);
+        await Promise.allSettled(
+          PRECACHE_ASSETS.map((url) => cache.add(url))
+        );
       })
       .then(() => self.skipWaiting())
   );
@@ -178,18 +176,7 @@ self.addEventListener('notificationclick', (event) => {
             return client.focus();
           }
         }
-        if (clients.openWindow) {
-          return clients.openWindow('/');
-        }
+        return clients.openWindow('/');
       })
   );
-});
-
-// Handle install prompt for PWA
-self.addEventListener('beforeinstallprompt', (event) => {
-  console.log('[ServiceWorker] Before install prompt');
-  // Prevent Chrome 67 and earlier from automatically showing the prompt
-  event.preventDefault();
-  // Stash the event so it can be triggered later
-  self.deferredPrompt = event;
 });

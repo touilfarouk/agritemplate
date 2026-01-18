@@ -3,12 +3,14 @@ const InstallButton = {
   data() {
     return {
       deferredPrompt: null,
-      showInstallButton: false
+      showInstallButton: false,
+      boundBeforeInstallPromptHandler: null
     };
   },
   mounted() {
     // Listen for beforeinstallprompt event
-    window.addEventListener('beforeinstallprompt', this.handleBeforeInstallPrompt);
+    this.boundBeforeInstallPromptHandler = this.handleBeforeInstallPrompt.bind(this);
+    window.addEventListener('beforeinstallprompt', this.boundBeforeInstallPromptHandler);
     
     // Check if the app is already installed
     window.addEventListener('appinstalled', () => {
@@ -17,12 +19,23 @@ const InstallButton = {
     });
   },
   beforeUnmount() {
-    window.removeEventListener('beforeinstallprompt', this.handleBeforeInstallPrompt);
+    if (this.boundBeforeInstallPromptHandler) {
+      window.removeEventListener('beforeinstallprompt', this.boundBeforeInstallPromptHandler);
+    }
   },
   methods: {
     handleBeforeInstallPrompt(e) {
       // Prevent the default prompt
       e.preventDefault();
+
+      const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+        window.navigator.standalone === true;
+      if (isStandalone) {
+        this.showInstallButton = false;
+        this.deferredPrompt = null;
+        return;
+      }
+
       // Stash the event so it can be triggered later
       this.deferredPrompt = e;
       // Show the install button
