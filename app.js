@@ -416,6 +416,31 @@ style.textContent = `
   /* Dark mode mobile optimizations */
   body.body--dark {
     background-color: #121212;
+    color: #e8eaed;
+  }
+
+  body.body--dark a {
+    color: #81c784;
+  }
+
+  body.body--dark .q-layout,
+  body.body--dark .q-page,
+  body.body--dark .q-page-container,
+  body.body--dark .q-drawer,
+  body.body--dark .q-toolbar,
+  body.body--dark .q-item,
+  body.body--dark .q-btn,
+  body.body--dark .q-field__native,
+  body.body--dark .q-field__label {
+    color: #e8eaed;
+  }
+
+  body.body--light {
+    color: #1f2937;
+  }
+
+  body.body--light a {
+    color: #2E7D32;
   }
   
   body.body--dark .q-footer {
