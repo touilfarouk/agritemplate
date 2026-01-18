@@ -1,13 +1,10 @@
 // Service Worker Version
-const version = 1;
-let isOnline = true;
-
-// Cache Names
-const staticCache = `agriStaticCache${version}`;
-const dynamicCache = `agriDynamicCache${version}`;
+const VERSION = 'v2.0.0';
+const CACHE_NAME = `agri-cache-${VERSION}`;
+const OFFLINE_URL = '/offline.html';
 
 // Files to cache on install
-const cacheList = [
+const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/app.js',
@@ -19,7 +16,8 @@ const cacheList = [
   '/pages/AboutPage.js',
   '/pages/ContactPage.js',
   '/bneder.png',
-  // Add other assets you want to cache
+  
+  // Icons
   '/icons/icon-72x72.png',
   '/icons/icon-96x96.png',
   '/icons/icon-128x128.png',
@@ -27,101 +25,138 @@ const cacheList = [
   '/icons/icon-152x152.png',
   '/icons/icon-192x192.png',
   '/icons/icon-384x384.png',
-  '/icons/icon-512x512.png'
+  '/icons/icon-512x512.png',
+  '/icons/icon-192x192-maskable.png',
+  '/icons/icon-512x512-maskable.png',
+  
+  // Fonts
+  'https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons',
+  'https://cdn.jsdelivr.net/npm/quasar@2.18.6/dist/quasar.prod.css'
 ];
 
 // Install Event - Cache static assets
-self.addEventListener('install', event => {
-  // Force activate the new service worker
-  self.skipWaiting();
+self.addEventListener('install', (event) => {
+  console.log('[ServiceWorker] Install');
   
+  // Create a new cache and add all files to it
   event.waitUntil(
-    caches.open(staticCache)
-      .then(cache => {
-        console.log('Caching static assets');
-        return cache.addAll(cacheList);
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        console.log('[ServiceWorker] Caching app shell');
+        return cache.addAll(PRECACHE_ASSETS);
       })
+      .then(() => self.skipWaiting())
   );
-});
-
-// Skip waiting and claim clients immediately
-self.addEventListener('activate', event => {
-  event.waitUntil(clients.claim());
 });
 
 // Activate Event - Clean up old caches
-self.addEventListener('activate', event => {
+self.addEventListener('activate', (event) => {
+  console.log('[ServiceWorker] Activate');
+  
+  // Remove previous cached data if any
   event.waitUntil(
-    caches.keys().then(keys => {
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        keys
-          .filter(key => key !== staticCache && key !== dynamicCache)
-          .map(key => caches.delete(key))
+        cacheNames
+          .filter((cacheName) => cacheName !== CACHE_NAME)
+          .map((cacheName) => caches.delete(cacheName))
       );
     })
+    .then(() => self.clients.claim())
   );
 });
 
-// Fetch Event - Serve from cache, falling back to network
-self.addEventListener('fetch', event => {
-  // Skip non-GET requests
-  if (event.request.method !== 'GET') return;
+// Fetch Event - Network first, then cache
+self.addEventListener('fetch', (event) => {
+  // Skip non-GET requests and chrome-extension URLs
+  if (event.request.method !== 'GET' || 
+      event.request.url.startsWith('chrome-extension://')) {
+    return;
+  }
 
+  // Handle navigation requests
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          // Cache the new version if the request was successful
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME)
+            .then((cache) => cache.put(event.request, responseToCache));
+          return response;
+        })
+        .catch(() => {
+          // If network fails, return the offline page
+          return caches.match('/index.html');
+        })
+    );
+    return;
+  }
+
+  // For other requests, try cache first, then network
   event.respondWith(
     caches.match(event.request)
-      .then(response => {
+      .then((cachedResponse) => {
         // Return cached response if found
-        if (response) {
-          return response;
+        if (cachedResponse) {
+          return cachedResponse;
         }
 
-        // Clone the request
-        const fetchRequest = event.request.clone();
+        // Otherwise, fetch from network
+        return fetch(event.request)
+          .then((response) => {
+            // Don't cache responses with invalid status
+            if (!response || response.status !== 200 || response.type !== 'basic') {
+              return response;
+            }
 
-        return fetch(fetchRequest).then(response => {
-          // Check if we received a valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
+            // Clone the response
+            const responseToCache = response.clone();
+
+            // Cache the response
+            caches.open(CACHE_NAME)
+              .then((cache) => {
+                cache.put(event.request, responseToCache);
+              });
+
             return response;
-          }
-
-          // Clone the response
-          const responseToCache = response.clone();
-
-          // Cache the response
-          caches.open(dynamicCache)
-            .then(cache => {
-              cache.put(event.request, responseToCache);
+          })
+          .catch(() => {
+            // If both cache and network fail, return offline page for HTML requests
+            if (event.request.headers.get('accept').includes('text/html')) {
+              return caches.match('/index.html');
+            }
+            return new Response('You are offline and no cache is available.', {
+              status: 408,
+              headers: { 'Content-Type': 'text/plain' }
             });
-
-          return response;
-        }).catch(() => {
-          // If both cache and network fail, show a fallback
-          if (event.request.mode === 'navigate') {
-            return caches.match('/index.html');
-          }
-          return new Response('You are offline and no cache available.', {
-            status: 408,
-            headers: { 'Content-Type': 'text/plain' }
           });
-        });
       })
   );
 });
 
-// Handle messages from the app
-self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'ONLINE_STATUS') {
-    isOnline = event.data.isOnline;
+// Handle background sync
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-data') {
+    console.log('[ServiceWorker] Background syncing');
+    // Add your background sync logic here
   }
 });
 
 // Handle push notifications
-self.addEventListener('push', event => {
-  const title = 'GreenHarvest Update';
+self.addEventListener('push', (event) => {
+  console.log('[ServiceWorker] Push message received');
+  
+  const title = 'AgriTemplate Update';
   const options = {
     body: event.data?.text() || 'New update available!',
     icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-96x96.png'
+    badge: '/icons/icon-96x96.png',
+    vibrate: [100, 50, 100],
+    data: {
+      dateOfArrival: Date.now(),
+      primaryKey: 1
+    }
   };
 
   event.waitUntil(
@@ -130,9 +165,31 @@ self.addEventListener('push', event => {
 });
 
 // Handle notification click
-self.addEventListener('notificationclick', event => {
+self.addEventListener('notificationclick', (event) => {
+  console.log('[ServiceWorker] Notification click received');
+  
   event.notification.close();
+  
   event.waitUntil(
-    clients.openWindow('/')
+    clients.matchAll({ type: 'window' })
+      .then((clientList) => {
+        for (const client of clientList) {
+          if (client.url === '/' && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        if (clients.openWindow) {
+          return clients.openWindow('/');
+        }
+      })
   );
+});
+
+// Handle install prompt for PWA
+self.addEventListener('beforeinstallprompt', (event) => {
+  console.log('[ServiceWorker] Before install prompt');
+  // Prevent Chrome 67 and earlier from automatically showing the prompt
+  event.preventDefault();
+  // Stash the event so it can be triggered later
+  self.deferredPrompt = event;
 });

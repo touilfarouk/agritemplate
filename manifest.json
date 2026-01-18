@@ -2,19 +2,32 @@
   "name": "AgriTemplate",
   "short_name": "AgriTemplate",
   "description": "Agricultural Template Application",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
+  "dir": "ltr",
+  "lang": "en-US",
+  "prefer_related_applications": false,
+  "id": "/?source=pwa",
   
   "background_color": "#2E7D32",
-  
-  "theme_color": "#2E7D32",               
-
+  "theme_color": "#2E7D32",
+  "display_override": ["window-controls-overlay", "standalone", "browser"],
   "categories": ["agriculture", "business", "productivity"],
-
   "screenshots": [],
-
+  
+  "ios": {
+    "title": "AgriTemplate",
+    "mobile_web_app_capable": true,
+    "status_bar_style": "black-translucent"
+  },
+  
+  "ms": {
+    "tile_color": "#2E7D32",
+    "tap_highlight": false
+  },
+  
   "shortcuts": [
     {
       "name": "View Products",
@@ -23,6 +36,11 @@
       "icons": [
         { "src": "/icons/icon-96x96.png", "sizes": "96x96", "type": "image/png" }
       ]
+    },
+    {
+      "name": "Contact Us",
+      "short_name": "Contact",
+      "url": "/contact"
     }
   ],
 
@@ -80,17 +98,10 @@
       "purpose": "maskable"
     }
   ],
-
-  "prefer_related_applications": false,
-
-  "related_applications": [],
-
+  
   "protocol_handlers": [],
-
- 
-
-  "display_override": ["standalone", "fullscreen"],
-
-  "theme_color_light": "#2E7D32",
-  "theme_color_dark": "#1B5E20"
+  "theme_colors": {
+    "light": "#2E7D32",
+    "dark": "#1B5E20"
+  }
 }
