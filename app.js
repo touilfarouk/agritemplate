@@ -21,12 +21,37 @@ const router = window.VueRouter.createRouter({
 
 const style = document.createElement('style')
 style.textContent = `
-  /* Base responsive styles */
+  /* Enhanced mobile responsive styles */
   html {
     font-size: 16px;
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
     touch-action: manipulation;
+    height: 100%;
+    overflow-x: hidden;
+  }
+  
+  body {
+    height: 100%;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Safe area support for notched devices */
+  @supports (padding: max(0px)) {
+    .safe-area-top {
+      padding-top: max(1rem, env(safe-area-inset-top));
+    }
+    .safe-area-bottom {
+      padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+    .safe-area-left {
+      padding-left: max(1rem, env(safe-area-inset-left));
+    }
+    .safe-area-right {
+      padding-right: max(1rem, env(safe-area-inset-right));
+    }
   }
   
   @media (max-width: 599px) {
@@ -34,19 +59,136 @@ style.textContent = `
       font-size: 14px;
     }
     
-    /* Prevent overscroll bounce on iOS */
+    /* Better viewport handling */
     body {
       position: fixed;
       width: 100%;
+      height: 100%;
       overflow: hidden;
     }
     
-    /* Better scroll behavior */
+    /* Enhanced scroll behavior */
     .q-page-container {
       -webkit-overflow-scrolling: touch;
       height: 100vh;
+      height: 100dvh; /* Dynamic viewport height */
       overflow-y: auto;
       overscroll-behavior-y: contain;
+      scroll-behavior: smooth;
+    }
+    
+    /* Pull-to-refresh indicator */
+    .pull-to-refresh-indicator {
+      position: fixed;
+      top: -60px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      transition: top 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 60px;
+      height: 60px;
+      background: rgba(46, 125, 50, 0.1);
+      border-radius: 50%;
+    }
+    
+    .pull-to-refresh-indicator.active {
+      top: 20px;
+    }
+    
+    /* Enhanced touch targets */
+    .q-btn {
+      min-height: 48px !important;
+      min-width: 48px !important;
+      padding: 0 16px !important;
+      border-radius: 8px !important;
+      position: relative;
+      overflow: hidden;
+      transform: translate3d(0,0,0);
+      transition: transform 0.1s, background-color 0.3s;
+    }
+    
+    .q-btn:active {
+      transform: scale(0.96);
+    }
+    
+    /* Better mobile navigation */
+    .q-footer {
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    
+    .q-tab {
+      min-height: 60px !important;
+      transition: transform 0.2s ease, color 0.3s ease;
+    }
+    
+    .q-tab--active {
+      transform: translateY(-2px);
+    }
+    
+    /* Enhanced card interactions */
+    .q-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+    }
+    
+    .q-card:active {
+      transform: scale(0.98);
+      background-color: rgba(0,0,0,0.02);
+    }
+    
+    /* Better form inputs */
+    .q-field {
+      margin-bottom: 16px;
+    }
+    
+    .q-field__control {
+      min-height: 56px !important;
+    }
+    
+    /* Prevent zoom on input focus */
+    @media screen and (-webkit-min-device-pixel-ratio:0) {
+      input, select, textarea {
+        font-size: 16px !important;
+      }
+    }
+    
+    /* Hide scrollbar but keep functionality */
+    ::-webkit-scrollbar {
+      display: none;
+    }
+    
+    /* Better image handling */
+    .q-img {
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    /* Enhanced transitions */
+    .q-page {
+      animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform, opacity;
+    }
+    
+    /* Mobile-specific spacing */
+    .q-pa-md {
+      padding: 12px 16px !important;
+    }
+    
+    .q-mb-md {
+      margin-bottom: 12px !important;
+    }
+    
+    /* Better text rendering */
+    .text-h4 {
+      line-height: 1.2 !important;
+    }
+    
+    .text-body1 {
+      line-height: 1.5 !important;
     }
   }
   
@@ -92,100 +234,6 @@ style.textContent = `
       width: auto;
       max-width: none;
     }
-  }
-  
-  /* Better touch targets and interactions for mobile */
-  @media (max-width: 599px) {
-    /* Disable text selection on interactive elements */
-    button, [role="button"], .q-btn {
-      -webkit-tap-highlight-color: rgba(0,0,0,0);
-      -webkit-touch-callout: none;
-      user-select: none;
-    }
-    
-    /* Smooth scrolling */
-    html, body {
-      -webkit-overflow-scrolling: touch;
-    }
-    
-    /* Prevent zoom on input focus */
-    @media screen and (-webkit-min-device-pixel-ratio:0) {
-      input, select, textarea {
-        font-size: 16px !important;
-      }
-    }
-    .q-btn {
-      min-height: 48px;
-      min-width: 48px;
-      padding: 0 16px;
-      border-radius: 8px;
-      position: relative;
-      overflow: hidden;
-      transform: translate3d(0,0,0);
-      transition: transform 0.1s, background-color 0.3s;
-    }
-    
-    .q-btn:active {
-      transform: scale(0.96);
-    }
-    
-    /* Ripple effect */
-    .q-btn:after {
-      content: '';
-      display: block;
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      top: 0;
-      left: 0;
-      pointer-events: none;
-      background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
-      background-repeat: no-repeat;
-      background-position: 50%;
-      transform: scale(10,10);
-      opacity: 0;
-      transition: transform .5s, opacity 1s;
-    }
-    
-    .q-btn:active:after {
-      transform: scale(0,0);
-      opacity: 0.2;
-      transition: 0s;
-    }
-    
-    .q-field--with-bottom {
-      padding-bottom: 16px;
-    }
-    
-    .q-field__bottom {
-      min-height: 20px;
-    }
-    
-    /* Bottom navigation active state */
-    .q-tab--active {
-      transform: translateY(-2px);
-    }
-    
-    /* Smooth transitions */
-    .q-tab {
-      transition: transform 0.2s ease, color 0.3s ease;
-    }
-    
-    /* Pull to refresh indicator */
-    .q-pull-to-refresh__puller {
-      height: 50px !important;
-      margin-top: -50px !important;
-    }
-    
-    /* Hide scrollbar but keep functionality */
-    ::-webkit-scrollbar {
-      display: none;
-    }
-  }
-  
-  /* Smooth transitions for all interactive elements */
-  a, button, .q-btn, .q-item, .q-tab, .q-field {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   /* Responsive text with better line heights */
@@ -273,12 +321,7 @@ style.textContent = `
     }
   }
   
-  /* App-like transitions and animations */
-  .q-page {
-    animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    will-change: transform, opacity;
-  }
-  
+  /* App-like animations */
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -304,7 +347,7 @@ style.textContent = `
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
   
-  /* Ripple effect for buttons */
+  /* Enhanced ripple effects */
   .ripple {
     position: relative;
     overflow: hidden;
@@ -333,11 +376,7 @@ style.textContent = `
     transition: 0s;
   }
   
-  /* Card hover effect for desktop and touch feedback for mobile */
-  .q-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-  }
-  
+  /* Desktop hover effects */
   @media (hover: hover) and (pointer: fine) {
     .q-card:hover {
       transform: translateY(-2px);
@@ -345,12 +384,46 @@ style.textContent = `
     }
   }
   
-  /* Active state for mobile */
+  /* Smooth transitions for all interactive elements */
+  a, button, .q-btn, .q-item, .q-tab, .q-field {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Mobile-specific improvements */
   @media (max-width: 599px) {
-    .q-card:active {
-      transform: scale(0.98);
-      background-color: rgba(0,0,0,0.02);
+    /* Disable text selection on interactive elements */
+    button, [role="button"], .q-btn {
+      -webkit-tap-highlight-color: rgba(0,0,0,0);
+      -webkit-touch-callout: none;
+      user-select: none;
     }
+    
+    /* Better scroll behavior */
+    html, body {
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Enhanced button feedback */
+    .q-btn {
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .q-btn:active {
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+  }
+  
+  /* Dark mode mobile optimizations */
+  body.body--dark {
+    background-color: #121212;
+  }
+  
+  body.body--dark .q-footer {
+    background-color: #1e1e1e !important;
+  }
+  
+  body.body--dark .q-card {
+    background-color: #1e1e1e !important;
   }
 `
 document.head.appendChild(style)

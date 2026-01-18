@@ -1,6 +1,7 @@
 export const AppShell = {
   setup () {
     const { ref, onMounted, watch, computed } = window.Vue
+    const $q = window.Quasar ? window.Quasar : {}
 
     const leftDrawerOpen = ref(false)
     const bottomSheetOpen = ref(false)
@@ -11,6 +12,9 @@ export const AppShell = {
     const touchStartX = ref(0)
     const touchStartY = ref(0)
     const isSwiping = ref(false)
+    const pullToRefreshThreshold = ref(80)
+    const pullToRefreshY = ref(0)
+    const isPulling = ref(false)
     
     // Haptic feedback function
     const hapticFeedback = (type = 'light') => {
@@ -71,11 +75,18 @@ export const AppShell = {
       applyDark(value)
     })
 
-    // Touch event handlers for swipe gestures
+    // Enhanced touch event handlers for mobile gestures
     const onTouchStart = (e) => {
       touchStartX.value = e.touches[0].clientX
       touchStartY.value = e.touches[0].clientY
       isSwiping.value = true
+      
+      // Check for pull-to-refresh
+      const scrollTop = document.documentElement.scrollTop || document.body.scrollTop
+      if (scrollTop === 0) {
+        isPulling.value = true
+        pullToRefreshY.value = 0
+      }
     }
 
     const onTouchMove = (e) => {
@@ -84,9 +95,20 @@ export const AppShell = {
       const touchX = e.touches[0].clientX
       const touchY = e.touches[0].clientY
       const diffX = touchStartX.value - touchX
-      const diffY = touchStartY.value - touchY
+      const diffY = touchY - touchStartY.value
       
-      // Only handle horizontal swipes
+      // Handle pull-to-refresh
+      if (isPulling.value && diffY > 0 && Math.abs(diffY) > Math.abs(diffX)) {
+        e.preventDefault()
+        pullToRefreshY.value = Math.min(diffY, pullToRefreshThreshold.value * 1.5)
+        
+        if (pullToRefreshY.value >= pullToRefreshThreshold.value && !refreshing.value) {
+          hapticFeedback('medium')
+        }
+        return
+      }
+      
+      // Only handle horizontal swipes for navigation
       if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 30) {
         e.preventDefault()
       }
@@ -98,9 +120,21 @@ export const AppShell = {
       const touchX = e.changedTouches[0].clientX
       const touchY = e.changedTouches[0].clientY
       const diffX = touchStartX.value - touchX
-      const diffY = touchStartY.value - touchY
+      const diffY = touchY - touchStartY.value
       
-      // Only handle horizontal swipes with minimal vertical movement
+      // Handle pull-to-refresh
+      if (isPulling.value && pullToRefreshY.value >= pullToRefreshThreshold.value && !refreshing.value) {
+        onRefresh(() => {})
+        isPulling.value = false
+        pullToRefreshY.value = 0
+        return
+      }
+      
+      // Reset pull state
+      isPulling.value = false
+      pullToRefreshY.value = 0
+      
+      // Handle horizontal swipes for navigation
       if (Math.abs(diffX) > 50 && Math.abs(diffY) < 30) {
         const routes = ['/', '/services', '/products', '/about', '/contact']
         const currentIndex = routes.indexOf(route.path)
@@ -131,6 +165,8 @@ export const AppShell = {
       bottomSheetOpen,
       isDark,
       refreshing,
+      pullToRefreshY,
+      isPulling,
       navBtnClass,
       drawerItemClass,
       go,
@@ -173,40 +209,54 @@ export const AppShell = {
         </q-toolbar>
       </q-header>
 
-      <q-drawer v-model="leftDrawerOpen" side="left" overlay elevated :width="250" :breakpoint="600">
-        <q-list>
-          <q-item-label header>Navigation</q-item-label>
-          <q-item clickable v-ripple :class="drawerItemClass('/')" @click="go('/')">
-            <q-item-section avatar>
-              <q-icon name="home" />
-            </q-item-section>
-            <q-item-section>Home</q-item-section>
-          </q-item>
-          <q-item clickable v-ripple :class="drawerItemClass('/services')" @click="go('/services')">
-            <q-item-section avatar>
-              <q-icon name="eco" />
-            </q-item-section>
-            <q-item-section>Services</q-item-section>
-          </q-item>
-          <q-item clickable v-ripple :class="drawerItemClass('/products')" @click="go('/products')">
-            <q-item-section avatar>
-              <q-icon name="shopping_cart" />
-            </q-item-section>
-            <q-item-section>Products</q-item-section>
-          </q-item>
-          <q-item clickable v-ripple :class="drawerItemClass('/about')" @click="go('/about')">
-            <q-item-section avatar>
-              <q-icon name="info" />
-            </q-item-section>
-            <q-item-section>About</q-item-section>
-          </q-item>
-          <q-item clickable v-ripple :class="drawerItemClass('/contact')" @click="go('/contact')">
-            <q-item-section avatar>
-              <q-icon name="phone" />
-            </q-item-section>
-            <q-item-section>Contact</q-item-section>
-          </q-item>
-        </q-list>
+      <q-drawer v-model="leftDrawerOpen" side="left" overlay elevated :width="280" :breakpoint="600" :behavior="$q.platform.is.mobile ? 'mobile' : 'desktop'">
+        <q-scroll-area class="fit">
+          <q-list>
+            <q-item-label header class="text-green-7">Navigation</q-item-label>
+            <q-item clickable v-ripple :class="drawerItemClass('/')" @click="go('/')">
+              <q-item-section avatar>
+                <q-icon name="home" />
+              </q-item-section>
+              <q-item-section>Home</q-item-section>
+            </q-item>
+            <q-item clickable v-ripple :class="drawerItemClass('/services')" @click="go('/services')">
+              <q-item-section avatar>
+                <q-icon name="eco" />
+              </q-item-section>
+              <q-item-section>Services</q-item-section>
+            </q-item>
+            <q-item clickable v-ripple :class="drawerItemClass('/products')" @click="go('/products')">
+              <q-item-section avatar>
+                <q-icon name="shopping_cart" />
+              </q-item-section>
+              <q-item-section>Products</q-item-section>
+            </q-item>
+            <q-item clickable v-ripple :class="drawerItemClass('/about')" @click="go('/about')">
+              <q-item-section avatar>
+                <q-icon name="info" />
+              </q-item-section>
+              <q-item-section>About</q-item-section>
+            </q-item>
+            <q-item clickable v-ripple :class="drawerItemClass('/contact')" @click="go('/contact')">
+              <q-item-section avatar>
+                <q-icon name="phone" />
+              </q-item-section>
+              <q-item-section>Contact</q-item-section>
+            </q-item>
+            
+            <q-separator class="q-my-md" />
+            
+            <q-item-label header class="text-green-7">Quick Actions</q-item-label>
+            <q-item clickable v-ripple @click="toggleDark">
+              <q-item-section avatar>
+                <q-icon :name="isDark ? 'light_mode' : 'dark_mode'" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>{{ isDark ? 'Light Mode' : 'Dark Mode' }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-scroll-area>
       </q-drawer>
 
       <q-page-container>
@@ -225,37 +275,49 @@ export const AppShell = {
       </q-page-container>
       
       <!-- Bottom Sheet (Mobile) -->
-      <q-dialog v-model="bottomSheetOpen" position="bottom" seamless>
+      <q-dialog v-model="bottomSheetOpen" position="bottom" seamless maximized>
         <q-card class="rounded-t-lg" style="width: 100%; max-width: 600px;">
-          <q-card-section class="bg-green-7 text-white">
-            <div class="text-h6">Quick Actions</div>
+          <q-card-section class="bg-green-7 text-white row items-center no-wrap">
+            <div class="text-h6">Quick Navigation</div>
+            <q-space />
+            <q-btn flat round dense icon="close" @click="bottomSheetOpen = false" />
           </q-card-section>
           <q-list>
-            <q-item clickable v-ripple @click="go('/services')">
+            <q-item clickable v-ripple @click="go('/about'); bottomSheetOpen = false">
               <q-item-section avatar>
-                <q-icon name="eco" color="green-7" />
+                <q-icon name="info" color="green-7" />
               </q-item-section>
-              <q-item-section>Our Services</q-item-section>
-            </q-item>
-            <q-item clickable v-ripple @click="go('/products')">
-              <q-item-section avatar>
-                <q-icon name="shopping_cart" color="green-7" />
+              <q-item-section>
+                <q-item-label>About Us</q-item-label>
+                <q-item-label caption>Learn about our mission</q-item-label>
               </q-item-section>
-              <q-item-section>Our Products</q-item-section>
             </q-item>
-            <q-item clickable v-ripple @click="go('/contact')">
+            <q-item clickable v-ripple @click="go('/contact'); bottomSheetOpen = false">
               <q-item-section avatar>
                 <q-icon name="phone" color="green-7" />
               </q-item-section>
-              <q-item-section>Contact Us</q-item-section>
+              <q-item-section>
+                <q-item-label>Contact</q-item-label>
+                <q-item-label caption>Get in touch with us</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-separator />
+            <q-item clickable v-ripple @click="toggleDark(); bottomSheetOpen = false">
+              <q-item-section avatar>
+                <q-icon :name="isDark ? 'light_mode' : 'dark_mode'" color="green-7" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>{{ isDark ? 'Light Mode' : 'Dark Mode' }}</q-item-label>
+                <q-item-label caption>Toggle theme</q-item-label>
+              </q-item-section>
             </q-item>
           </q-list>
         </q-card>
       </q-dialog>
       
       <!-- Bottom Navigation (Mobile) -->
-      <q-footer elevated class="bg-white lt-md">
-        <div class="row no-wrap items-center justify-between q-px-sm">
+      <q-footer elevated class="bg-white lt-md" style="height: 60px;">
+        <div class="row no-wrap items-center justify-between q-px-sm full-height">
           <q-btn 
             flat 
             round 
@@ -263,6 +325,7 @@ export const AppShell = {
             icon="menu" 
             @click="leftDrawerOpen = !leftDrawerOpen"
             class="q-mx-xs"
+            size="sm"
           />
           
           <q-tabs
@@ -287,7 +350,8 @@ export const AppShell = {
               :icon="item.icon"
               :label="item.label"
               @click="go(item.path)"
-              class="q-px-sm"
+              class="q-px-xs"
+              style="min-height: 60px;"
             />
           </q-tabs>
           
@@ -295,15 +359,17 @@ export const AppShell = {
             flat 
             round 
             dense 
-            icon="add" 
+            icon="more_horiz" 
             @click="bottomSheetOpen = true"
             class="q-mx-xs"
             color="green-7"
+            size="sm"
           />
         </div>
       </q-footer>
 
-      <q-footer elevated class="bg-green-9 text-white">
+      <!-- Desktop Footer -->
+      <q-footer elevated class="bg-green-9 text-white gt-sm">
         <q-toolbar class="q-pa-md">
           <div class="text-center full-width">
             <div class="text-caption text-uppercase q-mb-xs">© 2024 GreenHarvest Agriculture</div>
