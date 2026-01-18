@@ -1,4 +1,9 @@
+import { InstallButton } from './InstallButton.js';
+
 export const AppShell = {
+  components: {
+    InstallButton
+  },
   setup () {
     const { ref, onMounted, watch, computed } = window.Vue
     const $q = window.Quasar ? window.Quasar : {}
@@ -197,6 +202,9 @@ export const AppShell = {
           </div>
           
           <q-space />
+          <!-- Install Button -->
+          <install-button />
+          
           <q-btn
             dense
             flat

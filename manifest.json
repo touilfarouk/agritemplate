@@ -6,7 +6,8 @@
   "scope": "/",
   "display": "standalone",
   "background_color": "#2E7D32",  
-  "theme_color": "#2E7D32",       
+  "theme_color": "#2E7D32",   
+  "orientation": "portrait-primary",    
   "categories": ["agriculture", "business", "productivity"],
   "screenshots": [],
   "shortcuts": [
