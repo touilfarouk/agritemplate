@@ -182,7 +182,7 @@ export const AppShell = {
           <q-btn dense flat round icon="menu" @click="leftDrawerOpen = !leftDrawerOpen" class="q-mr-sm" />
           <q-toolbar-title class="text-subtitle1 text-sm-h6">
             <q-avatar size="md" class="q-mr-sm">
-              <img src="bneder.png" />
+              <img src="logo.svg" />
             </q-avatar>
             GreenHarvest
           </q-toolbar-title>

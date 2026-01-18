@@ -441,3 +441,36 @@ if (quasar && quasar.IconSet && typeof quasar.IconSet.set === 'function') {
   }
 }
 app.mount('#q-app')
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/ws.js')
+      .then(registration => {
+        console.log('Service Worker registered with scope:', registration.scope);
+        
+        // Check for updates
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('New content is available; please refresh.');
+              // You can add a UI notification here to inform the user
+            }
+          });
+        });
+      })
+      .catch(error => {
+        console.error('Service Worker registration failed:', error);
+      });
+  });
+}
+
+// Listen for controller change (when a new service worker takes over)
+let refreshing = false;
+navigator.serviceWorker.addEventListener('controllerchange', () => {
+  if (!refreshing) {
+    window.location.reload();
+    refreshing = true;
+  }
+});
